@@ -24,33 +24,48 @@ import * as moment from 'moment'
 
 // See the Moment.js docs for the meaning of these formats:
 // https://momentjs.com/docs/#/displaying/format/
-export const MY_FORMATS = {
-  parse: {
-    dateInput: 'MM/YYYY',
-  },
-  display: {
-    dateInput: 'MM/YYYY',
-    monthYearLabel: 'MMM YYYY',
-    dateA11yLabel: 'LL',
-    monthYearA11yLabel: 'MMMM YYYY',
-  },
-};
+// export const MY_FORMATS = {
+//   parse: {
+//     dateInput: 'MM/YYYY',
+//   },
+//   display: {
+//     dateInput: 'MM/YYYY',
+//     monthYearLabel: 'MMM YYYY',
+//     dateA11yLabel: 'LL',
+//     monthYearA11yLabel: 'MMMM YYYY',
+//   },
+// };
 
 @Component({
 	selector: 'app-pacotes',
 	templateUrl: './pacotes.component.html',
 	styleUrls: ['./pacotes.component.css'],
 	providers: [
-		 // `MomentDateAdapter` can be automatically provided by importing `MomentDateModule` in your
-    // application's root module. We provide it at the component level here, due to limitations of
-    // our example generation script.
-    {
-		provide: DateAdapter,
-		useClass: MomentDateAdapter,
-		deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
-	  },
+	// 	 // `MomentDateAdapter` can be automatically provided by importing `MomentDateModule` in your
+    // // application's root module. We provide it at the component level here, due to limitations of
+    // // our example generation script.
+    // {
+	// 	provide: DateAdapter,
+	// 	useClass: MomentDateAdapter,
+	// 	deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
+	//   },
   
-	  {provide: MAT_DATE_FORMATS, useValue: MY_FORMATS},
+	//   {provide: MAT_DATE_LOCALE, useValue: 'pt-br'},
+
+	// The locale would typically be provided on the root module of your application. We do it at
+    // the component level here, due to limitations of our example generation script.
+    {provide: MAT_DATE_LOCALE, useValue: 'pt-br'},
+
+    // `MomentDateAdapter` and `MAT_MOMENT_DATE_FORMATS` can be automatically provided by importing
+    // `MatMomentDateModule` in your applications root module. We provide it at the component level
+    // here, due to limitations of our example generation script.
+    {
+      provide: DateAdapter,
+      useClass: MomentDateAdapter,
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS]
+    },
+    {provide: MAT_DATE_FORMATS, useValue: MAT_MOMENT_DATE_FORMATS},
+
 	],
 })
 export class PacotesComponent implements OnInit {
@@ -61,6 +76,7 @@ export class PacotesComponent implements OnInit {
 	exibirErro: boolean = false;
 
 	destino = new Iata();
+	// date = new Date();
 	date = new FormControl(moment());
 
 	constructor(
@@ -102,9 +118,8 @@ export class PacotesComponent implements OnInit {
 
 	buscarVoosPorDataDestino() {
 		this.exibirErro = false;
-		let data = moment(this.date.value).unix();
-
-		this.app_service.getVoosPorDataDestino(data, this.destino.id).subscribe((retorno) => {
+		let dataD = new Date(this.date.value.year(), this.date.value.month(), this.date.value.date(), 14, 41, 18);
+		this.app_service.getVoosPorDataDestino(dataD.getTime(), this.destino.id).subscribe((retorno) => {
 			if (retorno.length > 0) {
 				var menorPreco = new Voo();
 				for (let i in retorno) {
@@ -117,29 +132,17 @@ export class PacotesComponent implements OnInit {
 				this.converterNumberDate(this.pacote.voo.inboundDate);
 			} else {
 				this.exibirErro = true;
+				this.exibirPacote = false;
 			}
 		})
 	}
 
 
 	converterNumberDate(dataNumber: number) {
-		this.pacote.data = new Date(dataNumber * 1000);
+		this.pacote.data = new Date(dataNumber);
 	}
 
 	converterDateStringNumber(data: Date) {
 		return new Date(data).getTime();
-	}
-
-	chosenYearHandler(normalizedYear: Moment) {
-		const ctrlValue = this.date.value;
-		ctrlValue.year(normalizedYear.year());
-		this.date.setValue(ctrlValue);
-	}
-
-	chosenMonthHandler(normalizedMonth: Moment, datepicker: MatDatepicker<Moment>) {
-		const ctrlValue = this.date.value;
-		ctrlValue.month(normalizedMonth.month());
-		this.date.setValue(ctrlValue);
-		datepicker.close();
 	}
 }
